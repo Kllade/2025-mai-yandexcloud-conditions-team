@@ -8,11 +8,11 @@
 
 | Имя | Роль | Контакт  |
 | --- | --- | --- |
-| Михаил Рахимов | Капитан (Mobile) | [@ii](https://t.me/Klladee) |
-| Артем Игнатьев | ML | [@ii](https://t.me/zeustrug) |
-| Федор Волоснев | Backend | [@ii](https://t.me/gesu1337) |
-| Александр Руснак | Аналитик | [@ii](https://t.me/aleksandrR8) |
-| Дмитрий Широбоков | Backend | [@ii](https://t.me/Mr_Dryg) |
+| Михаил Рахимов | Капитан (Mobile) | [@Klladee](https://t.me/Klladee) |
+| Артем Игнатьев | ML | [@zeustrug](https://t.me/zeustrug) |
+| Федор Волоснев | Backend | [@gesu1337](https://t.me/gesu1337) |
+| Александр Руснак | Аналитик | [@aleksandrR8](https://t.me/aleksandrR8) |
+| Дмитрий Широбоков | Backend | [@Mr_Dryg](https://t.me/Mr_Dryg) |
 
 ## Постановка задачи
 
