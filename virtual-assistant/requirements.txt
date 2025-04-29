@@ -1,0 +1,11 @@
+awscli
+loguru
+mkdocs
+pip
+python-dotenv
+ruff
+tqdm
+typer
+-e .
+fastapi==0.110.0
+uvicorn==0.34.2
