@@ -75,15 +75,15 @@ class DatabaseSessionManager:
         async with self.get_session() as session:
             yield session
 
+    @asynccontextmanager
     async def get_db_with_transaction(self) -> AsyncGenerator[AsyncSession, None]:
         """
         Зависимость для FastAPI, предоставляющая сессию с управлением транзакцией.
 
-        Асинхронный генератор для использования с FastAPI в качестве зависимости,
-        который предоставляет сессию, автоматически выполняя коммит по завершении транзакции
+        Асинхронный контекстный менеджер, который предоставляет сессию, автоматически выполняя коммит по завершении транзакции
         или откат в случае ошибки.
 
-        Выходной тип: Асинхронный генератор сессии `AsyncSession`.
+        Выходной тип: Асинхронный контекстный менеджер сессии `AsyncSession`.
         """
         async with self.get_session() as session:
             async with self.managed_transaction(session):

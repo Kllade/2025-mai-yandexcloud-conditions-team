@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile.backend
     env_file:
       - api/.env
+      - bot/.env
     restart: on-failure
     ports:
       - "8000:8000"
@@ -14,23 +15,44 @@ services:
       - .:/app
     networks:
       - python_network
+    stop_grace_period: 30s
 
-  postgres_main:
-    image: postgres:13-alpine
-    env_file:
-      - bot/.env
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: on-failure
+  postgres:
+      image: postgres:13-alpine
+      env_file:
+          - api/.env
+      healthcheck:
+          test: ['CMD-SHELL', 'pg_isready -U postgres']
+          interval: 5s
+          timeout: 5s
+          retries: 5
+      volumes:
+          - postgres_data:/var/lib/postgresql/data
+      networks:
+          - python_network
+      ports:
+        - '5432:5432'
+
+  redis:
+    image: redis:latest
+    container_name: redis_container
     ports:
-      - "5433:5432"
+      - "6380:6379"
+    volumes:
+      - ./redisdata:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
     networks:
       - python_network
-    expose:
-      - 5432
 
 volumes:
-  postgres_data: 
+  postgres_data:
+  redisdata:
 
 
 networks:

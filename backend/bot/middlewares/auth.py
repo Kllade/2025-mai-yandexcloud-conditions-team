@@ -8,6 +8,7 @@ import logging
 from api.users.service import users_service
 from api.users.schemas import UserFilter, UserCreate
 from bot.utils.command import find_command_argument
+from bot.core.config import settings
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -16,33 +17,48 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
+
 logger = logging.getLogger(__name__)
 
+from aiogram.types import Update, Message
+
 class AuthMiddleware(BaseMiddleware):
-    async def __call__(
-        self,
-        handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
-        event: TelegramObject,
-        data: dict[str, Any],
-    ) -> Any:
-        if not isinstance(event, Message):
-            return await handler(event, data)
-    
+    async def __call__(self, handler, event: TelegramObject, data: dict[str, Any]):
+        # Проверяем, что event — это Update с message
+        if isinstance(event, Update) and event.message:
+            message: Message = event.message
+            session: AsyncSession = data.get("session")
+            
+            if not session:
+                return await handler(event, data)
 
-        session: AsyncSession = data["session"]
-        message: Message = event
-        user = message.from_user
+            from_user = message.from_user
+            logger.info(f"from_user: {from_user}")
+            if not from_user:
+                return await handler(event, data)
 
-        if not user:
-            return await handler(event, data)
-        user = users_service.find_one_or_none(session=session, filters=UserFilter(id=user.id))
-        if user:
-            return await handler(event, data)
+            user = await users_service.find_one_or_none(
+                session=session,
+                filters=UserFilter(tg_id=from_user.id)
+            )
+            logger.info(f"user: {user}")
+            if user:
+                return await handler(event, data)
 
-        referrer = find_command_argument(message.text)
+            logger.info(f"Registering new user | user_id: {from_user.id} | message: {message.text}")
 
-        logger.info(f"new user registration | user_id: {user.id} | message: {message.text}")
-
-        await users_service.add(session=session, values=UserCreate(tg_id=user.id, tg_nick=user.username, is_admin=False))
+            await users_service.add(
+                session=session,
+                values=UserCreate(
+                    tg_id=from_user.id,
+                    tg_nick=from_user.username,
+                    is_admin=str(from_user.id) in settings.ADMIN_IDS.split(","),
+                    request_count=0,
+                    positive_count=0,
+                    negative_count=0,
+                )
+            )
 
         return await handler(event, data)
+
+

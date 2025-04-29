@@ -9,7 +9,7 @@ from aiogram_dialog.widgets.kbd import Cancel, Button, Back, SwitchTo, Row, Next
 from bot.dialogs.main_menu.states import MainMenu
 from bot.handlers.on_click.main_menu import (
     on_start_question, on_often_questions, on_support, 
-    on_back_to_main_menu, on_question_submitted, on_view_history,
+    on_back_to_main_menu, process_text_question, on_view_history,
     on_ask_another_question
 )
 
@@ -43,7 +43,7 @@ def main_menu_window():
 def start_question_window():
     return Window(
         Const(text="Задайте ваш вопрос:"),
-        TextInput(id="question_input", on_success=on_question_submitted),
+        TextInput(id="question_input", on_success=process_text_question),
         Cancel(Const("Выйти"), id="back_to_main_menu", on_click=on_back_to_main_menu),
         state=MainMenu.start_question,
     )

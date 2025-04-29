@@ -7,7 +7,7 @@ from bot.core.loader import app, bot, dp
 from bot.handlers import get_handlers_router
 from bot.keyboards.default_commands import remove_default_commands, set_default_commands
 from bot.middlewares import register_middlewares
-from bot.dialogs.main_menu.windows import menu_dialogs
+from bot.dialogs import menu_dialogs
 
 
 
@@ -18,13 +18,17 @@ async def on_startup() -> None:
     logger.info("bot starting...")
 
     register_middlewares(dp)
-    dp.include_router(get_handlers_router())
+    print("register_middlewares")
+    setup_dialogs(dp)
     dialogs = menu_dialogs()
     for dialog in dialogs:
         dp.include_router(dialog)
-
-    await set_default_commands(bot)
-    setup_dialogs(dp)
+    print("include_dialogs")
+    #await set_default_commands(bot)
+    print("set_default_commands")
+    print("setup_dialogs")
+    dp.include_router(get_handlers_router())
+    print("include_router")
     bot_info = await bot.get_me()
 
     logger.info(f"Name     - {bot_info.full_name}")
@@ -93,7 +97,34 @@ async def main() -> None:
         await bot.delete_webhook()
         await setup_webhook()
     else:
-        await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+        polling_task = asyncio.create_task(
+                dp.start_polling(
+                    bot,
+                    allowed_updates=dp.resolve_used_update_types(),
+                    close_bot_session=True
+                )
+            )
+        await polling_task
 
 async def stop_polling():
+    """Останавливает поллинг и закрывает все соединения"""
+    logger.info("Остановка бота...")
+    
+    # Останавливаем поллинг
     await dp.stop_polling()
+    
+    # Закрываем соединения с Redis
+    if hasattr(dp, 'storage') and dp.storage:
+        await dp.storage.close()
+        await dp.storage.wait_closed()
+    
+    # Закрываем сессию бота
+    if hasattr(bot, 'session') and bot.session:
+        await bot.session.close()
+    
+    logger.info("Бот остановлен")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+

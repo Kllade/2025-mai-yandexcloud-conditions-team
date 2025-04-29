@@ -8,12 +8,10 @@ from sqlalchemy import Integer, Enum, ForeignKey
 class QuestionsOrm(Base):
     __tablename__ = "questions"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.tg_id", ondelete="SET NULL"))
     question_text: Mapped[str] = mapped_column(unique=True)
-    message_id: Mapped[int]
+    message_id: Mapped[int] = mapped_column(nullable=False)
     
-    def __repr__(self):
-        return f"<Question(id={self.id}, user_id={self.user_id}, text={self.question_text[:50]}...)>" 
     
     
     

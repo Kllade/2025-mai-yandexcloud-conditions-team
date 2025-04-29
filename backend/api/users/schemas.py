@@ -9,8 +9,8 @@ class User(BaseModel):
     request_count: int
     positive_count: int
     negative_count: int
-    favorite_instituties: list[int]
-    education_type: EducationType
+    favorite_instituties: list[int] | None = None
+    education_type: EducationType | None = None
 
 class UserRead(User):
     id: int
@@ -23,12 +23,12 @@ class UserCreate(User):
 
 
 class UserFilter(BaseModel):
-    id: int 
-    created_at: datetime 
-    updated_at: datetime 
-    tg_id: int
-    tg_nick: str
-    is_admin: bool
+    id: int | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    tg_id: int | None = None
+    tg_nick: str | None = None
+    is_admin: bool | None = None
     request_count: int | None = None
     positive_count: int | None = None
     negative_count: int | None = None

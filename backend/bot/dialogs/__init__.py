@@ -8,7 +8,7 @@ from bot.dialogs.main_menu.windows import (
 from bot.dialogs.main_menu.states import MainMenu
 
 
-def menu_dialogs():
+def menu_dialogs(): 
     return [
         Dialog(
             start_window(),

@@ -19,16 +19,16 @@ class BaseRepository(Generic[T]):
         if self.model is None:
             raise ValueError("Модель должна быть указана в дочернем классе")
 
-    async def find_one_or_none_by_pid(self, session: AsyncSession, data_pid: int):
+    async def find_one_or_none_by_id(self, session: AsyncSession, data_id: int):
         try:
-            query = select(self.model).filter_by(pid=data_pid)
+            query = select(self.model).filter_by(id=data_id)
             result = await session.execute(query)
             record = result.scalar_one_or_none()
-            log_message = f"Запись {self.model.__name__} с ID {data_pid} {'найдена' if record else 'не найдена'}."
+            log_message = f"Запись {self.model.__name__} с ID {data_id} {'найдена' if record else 'не найдена'}."
             logger.info(log_message)
             return record
         except SQLAlchemyError as e:
-            logger.error(f"Ошибка при поиске записи с ID {data_pid}: {e}")
+            logger.error(f"Ошибка при поиске записи с ID {data_id}: {e}")
             raise
 
     async def find_one_or_none(self, session: AsyncSession, filters: BaseModel):
@@ -141,7 +141,7 @@ class BaseRepository(Generic[T]):
             f"Подсчет количества записей {self.model.__name__} по фильтру: {filter_dict}"
         )
         try:
-            query = select(func.count(self.model.pid)).filter_by(**filter_dict)
+            query = select(func.count(self.model.id)).filter_by(**filter_dict)
             result = await session.execute(query)
             count = result.scalar()
             logger.info(f"Найдено {count} записей.")
@@ -156,13 +156,13 @@ class BaseRepository(Generic[T]):
             updated_count = 0
             for record in records:
                 record_dict = record.model_dump(exclude_unset=True)
-                if "pid" not in record_dict:
+                if "id" not in record_dict:
                     continue
 
-                update_data = {k: v for k, v in record_dict.items() if k != "pid"}
+                update_data = {k: v for k, v in record_dict.items() if k != "id"}
                 stmt = (
                     sqlalchemy_update(self.model)
-                    .filter_by(id=record_dict["pid"])
+                    .filter_by(id=record_dict["id"])
                     .values(**update_data)
                 )
                 result = await session.execute(stmt)

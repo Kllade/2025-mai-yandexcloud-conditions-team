@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 router = APIRouter(prefix="/users", tags=["Results"])
 
 
-# @router.get("/is_admin/{user_id}")
-# async def is_admins(user_id: int, session: AsyncSession = SessionDep):
-#     return await users_service.is_admin(session=session, user_id=user_id)
+@router.get("")
+async def get_all(session: AsyncSession = SessionDep):
+    return await users_service.find_all(session=session)
    

@@ -12,14 +12,14 @@ class EducationType(enum.Enum):
 class UsersOrm(Base):
     __tablename__ = "users"
 
-    tg_id: Mapped[int]
+    tg_id: Mapped[int] = mapped_column(unique=True, nullable=False)
     tg_nick: Mapped[str]
     is_admin: Mapped[bool]
     request_count: Mapped[int]
     positive_count: Mapped[int]
     negative_count: Mapped[int]
-    favorite_instituties: Mapped[list[int]] = mapped_column(ARRAY(Integer))
-    education_type: Mapped[EducationType] = mapped_column(Enum(EducationType, name="education_type_enum"))
+    favorite_instituties: Mapped[list[int]] = mapped_column(ARRAY(Integer), nullable=True)
+    education_type: Mapped[EducationType] = mapped_column(Enum(EducationType, name="education_type_enum"), nullable=True)
     
     
     

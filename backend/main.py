@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 from bot.utils.setup_logging import setup_logging
-from bot.main import main, stop_polling
+from bot.main import main as bot_main, stop_polling as bot_stop_polling
+from api.users.view import router as users_router
 import asyncio
 
 
@@ -22,9 +23,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[dict, None]:
     """
 
     logger.info("Начало работы приложения...")
-    polling_task = asyncio.create_task(main())
+    polling_task = asyncio.create_task(bot_main())
     yield
-    await stop_polling()
+    await bot_stop_polling()
     logger.info("Завершение работы приложения...")
 
 
@@ -70,7 +71,7 @@ def register_routers(app: FastAPI) -> None:
 
     # Подключение роутеров
     app.include_router(root_router, tags=["root"])
-    # app.include_router(router_auth, prefix='/auth', tags=['Auth'])
+    app.include_router(users_router, prefix='/users', tags=['Users'])
     
 
 app = create_app()
