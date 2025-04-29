@@ -1,12 +1,12 @@
 from aiogram import Router
 from .start import router as start_router
-from .on_click import router as on_click_router
 from .reactions import router as reactions_router
+from .menu import router as menu_router
 
 router = Router(name="main_router")
 router.include_router(start_router)
-router.include_router(on_click_router)
 router.include_router(reactions_router)
+router.include_router(menu_router)
 
 
 def get_handlers_router() -> Router:
