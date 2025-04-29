@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
 )
 from api.core.config import settings
-from datetime import datetime
+import datetime
 
 
 engine = create_async_engine(url=settings.db.DATABASE_URL_asyncpg)
@@ -24,8 +24,8 @@ created_at = Annotated[datetime.datetime, mapped_column(server_default=text("now
 updated_at = Annotated[
     datetime.datetime,
     mapped_column(
-        server_default=text("now()"),  # Убираем TIMEZONE
-        onupdate=datetime.datetime.now(),  # Убираем timezone.utc
+        server_default=text("now()"),
+        onupdate=datetime.datetime.now(),
     ),
 ]
 
@@ -34,8 +34,8 @@ class Base(AsyncAttrs, DeclarativeBase):
     __abstract__ = True
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(
+    created_at: Mapped[datetime.datetime] = mapped_column(TIMESTAMP, server_default=func.now())
+    updated_at: Mapped[datetime.datetime] = mapped_column(
         TIMESTAMP,
         server_default=func.now(),
         onupdate=func.now()

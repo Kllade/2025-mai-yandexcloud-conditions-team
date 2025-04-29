@@ -10,19 +10,19 @@ if TYPE_CHECKING:
 
 users_commands: dict[str, dict[str, str]] = {
     "en": {
-        "help": "help",
+        "start": "help info",
         "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
         "supports": "support contacts",
     },
     "uk": {
-        "help": "help",
+        "start": "help info",
         "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
         "supports": "support contacts",
     },
     "ru": {
-        "help": "help",
+        "start": "help info",
         "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
         "supports": "support contacts",
@@ -31,25 +31,22 @@ users_commands: dict[str, dict[str, str]] = {
 
 admins_commands: dict[str, dict[str, str]] = {
     "en": {
-        "ping": "Check bot ping",
-        "stats": "Show bot stats",
-        "admin_menu": "menu for admin",
+        "start": "help info",
+        "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
-        "support": "test"
+        "supports": "support contacts",
     },
     "uk": {
-        "ping": "Check bot ping",
-        "stats": "Show bot stats",
-        "admin_menu": "menu for admin",
+        "start": "help info",
+        "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
-        "support": "test"
+        "supports": "support contacts",
     },
     "ru": {
-        "ping": "Check bot ping",
-        "stats": "Show bot stats",
-        "admin_menu": "menu for admin",
+        "start": "help info",
+        "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
-        "support": "test"
+        "supports": "support contacts",
     },
 }
 

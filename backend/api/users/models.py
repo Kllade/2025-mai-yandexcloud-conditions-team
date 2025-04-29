@@ -1,7 +1,7 @@
 from api.core.base.base_model import Base
 from sqlalchemy.orm import Mapped, mapped_column
 import enum
-from sqlalchemy import Integer, Enum
+from sqlalchemy import Integer, Enum, ARRAY
 
 class EducationType(enum.Enum):
     basic_higher="basic_higher"
@@ -18,7 +18,7 @@ class UsersOrm(Base):
     request_count: Mapped[int]
     positive_count: Mapped[int]
     negative_count: Mapped[int]
-    favorite_instituties: Mapped[list[int]]
+    favorite_instituties: Mapped[list[int]] = mapped_column(ARRAY(Integer))
     education_type: Mapped[EducationType] = mapped_column(Enum(EducationType, name="education_type_enum"))
     
     

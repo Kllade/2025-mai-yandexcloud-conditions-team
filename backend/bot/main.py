@@ -7,6 +7,7 @@ from bot.core.loader import app, bot, dp
 from bot.handlers import get_handlers_router
 from bot.keyboards.default_commands import remove_default_commands, set_default_commands
 from bot.middlewares import register_middlewares
+from bot.dialogs.main_menu.windows import menu_dialogs
 
 
 
@@ -93,3 +94,6 @@ async def main() -> None:
         await setup_webhook()
     else:
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+
+async def stop_polling():
+    await dp.stop_polling()
