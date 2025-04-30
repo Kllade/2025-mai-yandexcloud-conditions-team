@@ -17,7 +17,7 @@ app.add_middleware(
 )
 
 @app.post("/question")
-def promt(data: Data):
+async def promt(data: Data):
     return {"answer": agent(data.text)}
 
 
