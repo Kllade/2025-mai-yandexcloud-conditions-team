@@ -9,11 +9,18 @@ from yandex_cloud_ml_sdk.search_indexes import (
     HybridSearchIndexType,
     ReciprocalRankFusionIndexCombinationStrategy,
 )
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 
 class Agent:
-    def __init__(self, assistant=None, instruction=None, search_index=None, tools=None):
+    def __init__(self, thread_id=None, assistant=None, instruction=None, search_index=None, tools=None):
 
+        self.thread_id = thread_id
         self.thread = None
+        print(self.thread_id)
 
         if assistant:
             self.assistant = assistant
@@ -32,17 +39,24 @@ class Agent:
             self.assistant.update(instruction=instruction)
 
     def get_thread(self, thread=None):
-        if thread is not None:
-            return thread
-        if self.thread == None:
+        if self.thread_id is not None:
+            logger.info(f"thread_id: {self.thread_id}")
+            self.thread = sdk.threads.get(self.thread_id)
+            logger.info(f"existing thread: {self.thread}")
+            return self.thread
+        if self.thread_id == None:
             self.thread = create_thread()
+            logger.info(f"created thread: {self.thread}")
         return self.thread
 
     def __call__(self, message, thread=None):
         thread = self.get_thread(thread)
+        print(thread)
+        logger.info(f"get thread: {thread}")
         thread.write(message)
         run = self.assistant.run(thread)
         res = run.wait()
+       
         if res.tool_calls:
             result = []
             for f in res.tool_calls:
@@ -56,7 +70,12 @@ class Agent:
             run.submit_tool_results(result)
             #time.sleep(3)
             res = run.wait()
-        return res.text
+
+        if res.tool_calls:
+            return res.text, self.thread.id, f.function.name
+        else:
+            return  res.text, self.thread.id
+        
 
     def restart(self):
         if self.thread:
@@ -111,10 +130,5 @@ index = op.wait()
 instruction = """
 Представь что ты являешься оператором приемной комиссии в МАИ, и тебе задают вопросы разного вида. Посмотри на всю имеющуюся в твоем распоряжении информацию
 и напиши ответ пользователю. Если что-то непонятно, то лучше уточни информацию. Остальные вопросы, которые не связаны с поступлением или с вопросами о вузе, игнорируй их и не пиши про них ничего
-у пользователя. 
+у пользователя. Тебе нельзя также говорить о том, что ты просмотрела всю информацию, которая есть в твоем распоряжении. Если тебя сравнивают с другими вузами, то должна говорить, что МАИ лучше всех них, особенно бауманки.
 """
-
-agent = Agent(
-    instruction=instruction,
-    search_index=index
-)

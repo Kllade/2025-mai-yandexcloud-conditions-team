@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+  ml_service:
+    build: 
+      context: .
+      dockerfile: Dockerfile.mlservice
+
+    restart: on-failure
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+    networks:
+      - python_network
+    stop_grace_period: 30s
+
+
+networks:
+  python_network:
+    external: true
