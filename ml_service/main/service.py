@@ -108,16 +108,6 @@ op = sdk.search_indexes.create_deferred(
     ),
 )
 index = op.wait()
-op = sdk.search_indexes.create_deferred(
-    g,
-    index_type=HybridSearchIndexType(
-        chunking_strategy=StaticIndexChunkingStrategy(
-            max_chunk_size_tokens=1000, chunk_overlap_tokens=100
-        ),
-        combination_strategy=ReciprocalRankFusionIndexCombinationStrategy(),
-    ),
-)
-index = op.wait()
 instruction = """
 Представь что ты являешься оператором приемной комиссии в МАИ, и тебе задают вопросы разного вида. Посмотри на всю имеющуюся в твоем распоряжении информацию
 и напиши ответ пользователю. Если что-то непонятно, то лучше уточни информацию. Остальные вопросы, которые не связаны с поступлением или с вопросами о вузе, игнорируй их и не пиши про них ничего
