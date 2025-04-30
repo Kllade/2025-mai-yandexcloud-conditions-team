@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from api.users.service import users_service
-from api.core.session_manager import session_manager
+from bot.core.config import settings
 
 from aiogram.types import BotCommand, BotCommandScopeDefault, BotCommandScopeChat
 
@@ -13,19 +12,19 @@ users_commands: dict[str, dict[str, str]] = {
         "start": "help info",
         "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
-        "supports": "support contacts",
+        "support": "support contacts",
     },
     "uk": {
         "start": "help info",
         "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
-        "supports": "support contacts",
+        "support": "support contacts",
     },
     "ru": {
-        "start": "help info",
-        "contacts": "developer contact details",
-        "menu": "main menu with earning schemes",
-        "supports": "support contacts",
+        "start": "Помощь",
+        "contacts": "контакты разработчика",
+        "menu": "главное меню",
+        "support": "поддержка",
     },
 }
 
@@ -34,19 +33,19 @@ admins_commands: dict[str, dict[str, str]] = {
         "start": "help info",
         "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
-        "supports": "support contacts",
+        "support": "support contacts",
     },
     "uk": {
         "start": "help info",
         "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
-        "supports": "support contacts",
+        "support": "support contacts",
     },
     "ru": {
         "start": "help info",
         "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
-        "supports": "support contacts",
+        "support": "support contacts",
     },
 }
 
@@ -61,17 +60,15 @@ async def set_default_commands(bot: Bot) -> None:
             language_code=language_code,
         )
 
-        async with session_manager.get_db_with_transaction() as session:
-            admins = await users_service.get_all_admins(session)
-        for admin in admins:
-            
+
+        for admin in settings.ADMIN_IDS.split(","):
             await bot.set_my_commands(
                 [
                     BotCommand(command=command, description=description)
-                    for command, description in admins_commands[language_code].items()
-                ],
-                scope=BotCommandScopeChat(chat_id=admin.id),
-            )
+                        for command, description in admins_commands[language_code].items()
+                    ],
+                    scope=BotCommandScopeChat(chat_id=int(admin)),
+                )
 
 
 async def remove_default_commands(bot: Bot) -> None:

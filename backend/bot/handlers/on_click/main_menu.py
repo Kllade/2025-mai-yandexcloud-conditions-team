@@ -11,97 +11,47 @@ from api.users.service import users_service
 import requests 
 from bot.core.config import settings
 import logging
-
+from api.cache.redis import redis_client, set_redis_value
+from bot.core.loader import bot
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.fsm.context import FSMContext
+from bot.keyboards.inline_menu import main_menu_kb, close
+from sqlalchemy.ext.asyncio import AsyncSession
 logger = logging.getLogger(__name__)
 
-def get_main_menu_keyboard():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="❓ Задать вопрос", callback_data="ask_question")],
-        [InlineKeyboardButton(text="📋 История вопросов", callback_data="question_history")]
-    ])
 
-async def on_start_question(callback: CallbackQuery, widget: Button, dialog_manager: DialogManager):
-    logger.info("switch to start question")
-    await dialog_manager.switch_to(MainMenu.start_question)
-
-
-async def process_text_question(message: Message, widget: ManagedTextInput, dialog_manager: DialogManager):
-    """Обработчик успешного получения текста через TextInput в диалоге"""
-    value = widget.get_value()  # Получаем текст из виджета
-    
-    print(f"Получен текст через TextInput: {value}")
-    
-    # Передаем значение в функцию обработки вопроса
-    await process_question(message, dialog_manager, value)
-
-
-async def process_question(message: Message, dialog_manager: DialogManager, question_text: str):
+async def process_question(message: Message, state: FSMContext, question_text: str, session: AsyncSession):
     """Общая функция обработки вопроса независимо от источника текста"""
     try:
         
         question = await questions_service.add(
-            session=dialog_manager.middleware_data["session"],
-            values=QuestionCreate(user_id=message.from_user.id, question_text=question_text, message_id=message.message_id)
+            session=session,
+            values=QuestionCreate(user_id=message.from_user.id, question_text=" ".join(question_text.lower().split(" ")), message_id=message.message_id)
         )
         
-        # Подготавливаем запрос к API YandexGPT
-        prompt = {
-            "modelUri": f"gpt://{settings.YANDEX_FOLDER_ID}/yandexgpt-lite",
-            "completionOptions": {
-                "stream": False,
-                "temperature": 0.6,
-                "maxTokens": "2000"
-            },
-            "messages": [
-                {
-                    "role": "system",
-                    "text": "Ты ассистент для абитуриаентов, способный ответить на любой вопрос"
-                },
-                {
-                    "role": "user",
-                    "text": question_text
-                },
-            ]
-        }
-
-        # Отправляем запрос к API
-        url = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Api-Key {settings.YANDEX_API_KEY}"
-        }
-
-        response = requests.post(url, headers=headers, json=prompt)
         
-        # Проверяем успешность ответа
-        if response.status_code == 200:
-            result = response.json().get("result", {}).get("alternatives", [{}])[0].get("message", {}).get("text", "Не удалось получить ответ")
+        answer = await ml_service.get_answer(question_text) 
+        logger.info(f"answer: {answer}")
+        if answer:
+            await message.answer(
+                answer,
+                allowed_reactions=[
+                    ReactionTypeEmoji(emoji="👍"),
+                    ReactionTypeEmoji(emoji="👎")
+                ]
+            )
         else:
-            result = f"Ошибка при обращении к API: {response.status_code}"
-
-        # Отправляем ответ пользователю
-        await message.answer(
-            result,
-            allowed_reactions=[
-                ReactionTypeEmoji(emoji="👍"),
-                ReactionTypeEmoji(emoji="👎")
-            ]
-        )
-        
-        try:
-            await dialog_manager.switch_to(MainMenu.main_menu)
-        except NoContextError as e:
-            pass
+            await message.answer("Произошла ошибка при получении ответа. Попробуйте позже.")
+            
+        await state.set_state(MainMenu.start_question)
+        await message.answer("✍️ Напишите ваш новый вопрос:", reply_markup=close())
 
         
     except Exception as e:
         logger.error(f"Ошибка при обработке вопроса: {e}")
         await message.answer("Произошла ошибка при обработке вашего вопроса. Пожалуйста, попробуйте еще раз.")
 
-        try:
-            await dialog_manager.switch_to(MainMenu.main_menu)
-        except NoContextError as e:
-            pass
+
 
 async def on_reaction_added(message: Message, reaction: str):
     """Обработка добавления реакции"""
@@ -120,20 +70,29 @@ async def on_reaction_removed(message: Message, reaction: str):
         remove=True  
     )
 
-async def on_ask_another_question(callback: CallbackQuery, dialog_manager: DialogManager):
-    await dialog_manager.switch_to(MainMenu.start_question)
 
-async def on_back_to_main_menu(callback: CallbackQuery, widget: Button, dialog_manager: DialogManager):
-    await dialog_manager.switch_to(MainMenu.main_menu)
+async def on_support(user_id: int, message: Message):
+    user_key = f"support:user:{user_id}"
+    admin_ids = settings.ADMIN_IDS.split(",")
+    logger.info(f"admin_ids: {admin_ids}")
+    logger.info(f"user_id: {user_id}")
+    if await redis_client.exists(user_key):
+        await message.answer("У вас уже открыт чат поддержки. Ожидайте оператора.")
+        return
+    if str(user_id) in admin_ids:
+        await message.answer("Вы являетесь администратором.")
+        return
+    await set_redis_value(user_key, "waiting")
+    await message.answer("Запрос в службу поддержки отправлен. Ожидайте оператора.")
 
-async def on_view_history(callback: CallbackQuery, dialog_manager: DialogManager):
-    await dialog_manager.switch_to(MainMenu.question_history)
-
-async def on_often_questions(callback: CallbackQuery, dialog_manager: DialogManager):
-    # TODO: Implement FAQ functionality
-    pass
-
-async def on_support(callback: CallbackQuery, dialog_manager: DialogManager):
-    # TODO: Implement support functionality
-    pass
+    kb = InlineKeyboardBuilder()
+    kb.button(text="Взять чат", callback_data=f"take_{user_id}")
+    markup = kb.as_markup()
+    for admin_id in settings.ADMIN_IDS.split(","):
+        await bot.send_message(
+            int(admin_id),
+            f"Пользователь <a href=\"tg://user?id={user_id}\">{message.from_user.full_name}</a> запрашивает поддержку.",
+            reply_markup=markup,
+            parse_mode="HTML"
+        )
 

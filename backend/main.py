@@ -58,6 +58,7 @@ def create_app() -> FastAPI:
     return app
 
 
+
 def register_routers(app: FastAPI) -> None:
     """Регистрация роутеров приложения."""
     
@@ -68,8 +69,6 @@ def register_routers(app: FastAPI) -> None:
         return {
             "message": "Hello",
         }
-
-    # Подключение роутеров
     app.include_router(root_router, tags=["root"])
     app.include_router(users_router, prefix='/users', tags=['Users'])
     

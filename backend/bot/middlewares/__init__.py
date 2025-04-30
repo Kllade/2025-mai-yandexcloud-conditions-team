@@ -10,6 +10,6 @@ def register_middlewares(dp: Dispatcher) -> None:
 
     dp.update.outer_middleware(DatabaseMiddleware())
     dp.update.outer_middleware(AuthMiddleware())
-    #dp.update.outer_middleware(LoggingMiddleware())
+    dp.update.outer_middleware(LoggingMiddleware())
 
-    dp.callback_query.middleware(CallbackAnswerMiddleware())
+    #dp.callback_query.middleware(CallbackAnswerMiddleware())

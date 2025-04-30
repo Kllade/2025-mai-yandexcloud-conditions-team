@@ -33,7 +33,6 @@ class AuthMiddleware(BaseMiddleware):
                 return await handler(event, data)
 
             from_user = message.from_user
-            logger.info(f"from_user: {from_user}")
             if not from_user:
                 return await handler(event, data)
 
@@ -41,7 +40,6 @@ class AuthMiddleware(BaseMiddleware):
                 session=session,
                 filters=UserFilter(tg_id=from_user.id)
             )
-            logger.info(f"user: {user}")
             if user:
                 return await handler(event, data)
 

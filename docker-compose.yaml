@@ -3,11 +3,11 @@ version: '3.9'
 services:
   backend:
     build: 
-      context: .
+      context: ./backend
       dockerfile: Dockerfile.backend
     env_file:
-      - api/.env
-      - bot/.env
+      - /backend/api/.env
+      - /backend/bot/.env
     restart: on-failure
     ports:
       - "8000:8000"
@@ -20,7 +20,7 @@ services:
   postgres:
       image: postgres:13-alpine
       env_file:
-          - api/.env
+          - backend/api/.env
       healthcheck:
           test: ['CMD-SHELL', 'pg_isready -U postgres']
           interval: 5s
@@ -49,6 +49,19 @@ services:
     restart: always
     networks:
       - python_network
+  ml_service:
+    build: 
+      context: ./ml_service
+      dockerfile: Dockerfile.mlservice
+
+    restart: on-failure
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+    networks:
+      - python_network
+    stop_grace_period: 30s
 
 volumes:
   postgres_data:

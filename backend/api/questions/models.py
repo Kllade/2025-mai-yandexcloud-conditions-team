@@ -9,8 +9,9 @@ class QuestionsOrm(Base):
     __tablename__ = "questions"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.tg_id", ondelete="SET NULL"))
-    question_text: Mapped[str] = mapped_column(unique=True)
+    question_text: Mapped[str] = mapped_column()
     message_id: Mapped[int] = mapped_column(nullable=False)
+    
     
     
     
