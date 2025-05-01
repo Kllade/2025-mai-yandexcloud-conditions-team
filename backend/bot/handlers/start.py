@@ -13,7 +13,6 @@ async def start_handler(message: types.Message, state: FSMContext) -> None:
     # Удаляем клавиатуру, если она есть
     if message.reply_markup:
         await message.edit_reply_markup(reply_markup=None)
-    await state.set_state(MainMenu.main_menu)
     await message.answer(
         "👋 Добро пожаловать в чат-бот поддержки!\n\n"
             "Я помогу вам найти ответы на ваши вопросы. Вы можете:\n"

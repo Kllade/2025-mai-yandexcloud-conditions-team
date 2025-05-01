@@ -8,6 +8,8 @@ from api.questions.service import questions_service
 from api.questions.schemas import QuestionCreate
 from api.ml.service import ml_service
 from api.users.service import users_service
+from api.threads.service import thread_service
+from api.threads.schemas import ThreadCreate, ThreadFilter
 import requests 
 from bot.core.config import settings
 import logging
@@ -15,7 +17,7 @@ from api.cache.redis import redis_client, set_redis_value
 from bot.core.loader import bot
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.context import FSMContext
-from bot.keyboards.inline_menu import main_menu_kb, close
+from bot.keyboards.inline_menu import main_menu_kb
 from sqlalchemy.ext.asyncio import AsyncSession
 logger = logging.getLogger(__name__)
 
@@ -28,8 +30,11 @@ async def process_question(message: Message, state: FSMContext, question_text: s
             session=session,
             values=QuestionCreate(user_id=message.from_user.id, question_text=" ".join(question_text.lower().split(" ")), message_id=message.message_id)
         )
-        
-        
+        thread = await thread_service.find_one_or_none(
+            session=session,
+            values=ThreadFilter(user_id=message.from_user.id, question_id=question.id)
+        )
+
         answer = await ml_service.get_answer(question_text) 
         logger.info(f"answer: {answer}")
         if answer:
@@ -43,8 +48,6 @@ async def process_question(message: Message, state: FSMContext, question_text: s
         else:
             await message.answer("Произошла ошибка при получении ответа. Попробуйте позже.")
             
-        await state.set_state(MainMenu.start_question)
-        await message.answer("✍️ Напишите ваш новый вопрос:", reply_markup=close())
 
         
     except Exception as e:

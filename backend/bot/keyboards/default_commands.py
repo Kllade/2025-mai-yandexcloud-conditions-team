@@ -31,19 +31,16 @@ users_commands: dict[str, dict[str, str]] = {
 admins_commands: dict[str, dict[str, str]] = {
     "en": {
         "start": "help info",
-        "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
         "support": "support contacts",
     },
     "uk": {
         "start": "help info",
-        "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
         "support": "support contacts",
     },
     "ru": {
         "start": "help info",
-        "contacts": "developer contact details",
         "menu": "main menu with earning schemes",
         "support": "support contacts",
     },
