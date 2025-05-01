@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from service.service import Agent, instruction, index, CallOperator
+import asyncio
 
 class Data(BaseModel):
     text: str
@@ -26,8 +27,8 @@ async def promt(data: Data):
         search_index=index,
         tools=[]
     )
-    res = agent(data.text, data.thread_id)
-
+    loop = asyncio.get_running_loop()
+    res = await loop.run_in_executor(None, agent, data.text, data.thread_id)
 
     return {"answer": res[0], "thread_id": res[1]}
 
