@@ -1,7 +1,7 @@
 from fastapi import FastAPI 
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from service.service import Agent, instruction, index
+from service.service import Agent, instruction, index, CallOperator
 
 class Data(BaseModel):
     text: str
@@ -24,6 +24,7 @@ async def promt(data: Data):
         thread_id=data.thread_id,
         instruction=instruction,
         search_index=index,
+        tools=[]
     )
     res = agent(data.text, data.thread_id)
 
