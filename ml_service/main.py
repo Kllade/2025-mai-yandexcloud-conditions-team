@@ -24,14 +24,12 @@ async def promt(data: Data):
         instruction=instruction,
         search_index=index,
     )
-    res = agent(data.text)
+    res = await agent.__call_async__(data.text, data.thread_id)
     return {"answer": res[0], "thread_id": res[1]}
-
-
 
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0.0", port=8001, workers=3)
+    uvicorn.run("main:app", host="0.0.0.0", port=8001, workers=3, threads=3)

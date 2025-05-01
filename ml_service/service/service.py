@@ -10,6 +10,7 @@ from yandex_cloud_ml_sdk.search_indexes import (
     ReciprocalRankFusionIndexCombinationStrategy,
 )
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -90,6 +91,10 @@ class Agent:
         if delete_assistant:
             self.assistant.delete()
 
+    async def __call_async__(self, message: str, thread_id: str | None = None):
+        
+        return await asyncio.to_thread(self.__call__, message, thread_id)
+
 
 def create_thread():
     return sdk.threads.create(ttl_days=1, expiration_policy="static")
@@ -106,6 +111,8 @@ def get_token_count(text):
     return len(model.tokenize(text))
 
 def upload_file():
+    all_files = []
+
     return sdk.files.upload('docs/docs/parsed-json/data2024.json', ttl_days=1, expiration_policy="static")
 
 def printx(string):
@@ -113,7 +120,6 @@ def printx(string):
 
 folder_id = 'b1gst3c7cskk2big5fqn'
 api_key = 'AQVNzzJielnSayrAOlQWlxDMK49OShvzdqtUQdAp'
-
 sdk = YCloudML(folder_id=folder_id, auth=api_key)
 model = sdk.models.completions("yandexgpt", model_version="rc")
 g = upload_file()
