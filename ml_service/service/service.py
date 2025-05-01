@@ -22,7 +22,7 @@ class CallOperator(BaseModel):
 
     def process(self, thread):
         logger.info("Меня вызвали")
-        return "fffffff"
+        return "Вызов оператора"
 
 
 
