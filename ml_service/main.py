@@ -19,12 +19,15 @@ app.add_middleware(
 
 @app.post("/question")
 async def promt(data: Data):
+
     agent = Agent(
         thread_id=data.thread_id,
         instruction=instruction,
         search_index=index,
     )
-    res = await agent.__call_async__(data.text, data.thread_id)
+    res = agent(data.text, data.thread_id)
+
+
     return {"answer": res[0], "thread_id": res[1]}
 
 
@@ -32,4 +35,4 @@ async def promt(data: Data):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0.0", port=8001, workers=3, threads=3)
+    uvicorn.run("main:app", host="0.0.0.0", port=8001, workers=3)

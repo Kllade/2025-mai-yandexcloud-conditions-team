@@ -1,5 +1,6 @@
 from IPython.display import Markdown, display
 import os
+from pydantic import BaseModel
 from yandex_cloud_ml_sdk import YCloudML
 from glob import glob
 from tqdm.auto import tqdm
@@ -11,9 +12,31 @@ from yandex_cloud_ml_sdk.search_indexes import (
 )
 import logging
 import asyncio
+# import aiohttp
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+# class CallOperator(BaseModel):
+#     """Функция для вызова оператора."""
+
+# def get_call_operator(**kwargs):
+#     class ToolResponse:
+#         def process(self, thread):
+#             async with aiohttp.ClientSession() as session:
+#                 async with session.post(
+#                 f"http://backend:8000/support",
+#                 json=payload) as response:
+#                     if response.status == 200:
+#                         logger.info(f"data: {response}")
+#                         data = await response.json()
+#                         logger.info(f"data: {data}")
+#                         return data
+#                     else:
+#                         logger.error(f"error: {response}")
+#                         return "Извините, произошла ошибка при получении ответа. Попробуйте позже."
+#     return ToolResponse()
+
 
 
 class Agent:
@@ -21,7 +44,6 @@ class Agent:
 
         self.thread_id = thread_id
         self.thread = None
-        print(self.thread_id)
 
         if assistant:
             self.assistant = assistant
@@ -90,9 +112,7 @@ class Agent:
             self.thread.delete()
         if delete_assistant:
             self.assistant.delete()
-
     async def __call_async__(self, message: str, thread_id: str | None = None):
-        
         return await asyncio.to_thread(self.__call__, message, thread_id)
 
 
@@ -110,21 +130,47 @@ def create_assistant(model, tools=None):
 def get_token_count(text):
     return len(model.tokenize(text))
 
-def upload_file():
+def get_all_files(directory_path, indent=0):
+    items = os.listdir(directory_path)
     all_files = []
+    for item in items:
+        full_path = os.path.join(directory_path, item)
 
-    return sdk.files.upload('docs/docs/parsed-json/data2024.json', ttl_days=1, expiration_policy="static")
+        if os.path.isdir(full_path):
+            get_all_files(full_path, indent + 4)
+        else:
+            all_files.append(full_path)
+  
+    return all_files
+
+def upload_file(directory_path, indent=0):
+    return sdk.files.upload(directory_path, ttl_days=1, expiration_policy="static")
 
 def printx(string):
     display(Markdown(string))
 
+
+
 folder_id = 'b1gst3c7cskk2big5fqn'
 api_key = 'AQVNzzJielnSayrAOlQWlxDMK49OShvzdqtUQdAp'
+
 sdk = YCloudML(folder_id=folder_id, auth=api_key)
 model = sdk.models.completions("yandexgpt", model_version="rc")
-g = upload_file()
+
+all_files_1 = get_all_files(directory_path='docs/kb/edu')
+all_files_2 = get_all_files(directory_path='docs/kb/prohod')
+all_files_3 = get_all_files(directory_path='docs/kb/AAA')
+all_files_4 = get_all_files(directory_path='docs/kb/Admission rules')
+
+
+all_files_1.extend(all_files_2)
+all_files_1.extend(all_files_3)
+all_files_1.extend(all_files_4)
+df = pd.DataFrame(all_files_1, columns=["File"])
+df["Uploaded"] = df["File"].apply(upload_file)
+
 op = sdk.search_indexes.create_deferred(
-    g,
+    df["Uploaded"],
     index_type=HybridSearchIndexType(
         chunking_strategy=StaticIndexChunkingStrategy(
             max_chunk_size_tokens=1000, chunk_overlap_tokens=100
@@ -132,9 +178,19 @@ op = sdk.search_indexes.create_deferred(
         combination_strategy=ReciprocalRankFusionIndexCombinationStrategy(),
     ),
 )
+
 index = op.wait()
+
 instruction = """
-Представь что ты являешься оператором приемной комиссии в МАИ, и тебе задают вопросы разного вида. Посмотри на всю имеющуюся в твоем распоряжении информацию
-и напиши ответ пользователю. Если что-то непонятно, то лучше уточни информацию. Остальные вопросы, которые не связаны с поступлением или с вопросами о вузе, игнорируй их и не пиши про них ничего
-у пользователя. Тебе нельзя также говорить о том, что ты просмотрела всю информацию, которая есть в твоем распоряжении. Если тебя сравнивают с другими вузами, то должна говорить, что МАИ лучше всех них, особенно бауманки.
+Представь что ты являешься оператором приемной комиссии в МАИ, и тебе задают вопросы разного вида.
+Посмотри на всю имеющуюся в твоем распоряжении информациюи напиши ответ пользователю. Если что-то непонятно,
+то лучше уточни информацию. Остальные вопросы, которые не связаны с поступлением или с вопросами о вузе,
+игнорируй их и не пиши про них ничего у пользователя. Тебе нельзя также говорить о том, что ты просмотрела всю информацию,
+которая есть в твоем распоряжении. Если тебя сравнивают с другими вузами,
+то должна говорить, что МАИ лучше всех них, особенно бауманки, напиши все преимущества МАИ для абитуриента.
+Если тебе написали сообщение не на русском языке, то ответь на том языке, на котором тебе ответили.
+Также тебе нужны следующие навыки:
+- Умение инициировать темы разговора, предлагать пользователю варианты вопросов
+- Отслеживание состояния пользователя (интерес, растерянность) и адаптация общения
+Не отвечай очень большими фразами, лучше отвечай короткими ответами по делу, если спрашивают какое конкретное число (баллы, стипендии и тд) отвечай чему это число равно если знаешь, если не знаешь проси смотреть на официальный сайт.
 """

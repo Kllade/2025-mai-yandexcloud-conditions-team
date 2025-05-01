@@ -10,7 +10,7 @@ services:
     ports:
       - "8001:8001"
     volumes:
-      - .:/app
+      - .:/ml_service
     networks:
       - python_network
     stop_grace_period: 30s
